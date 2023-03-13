@@ -81,7 +81,7 @@ bool reBinarySearch(int* pArry, int Target, int LeftIndex, int RightIndex){
     else if(LeftIndex == RightIndex){//ヒットしないパターン
         return false;
     }
-    else if(Target <= Mid){
+    else if(Target <= Mid){ 
         LeftIndex = 0;
         RightIndex = MidIndex;
         return reBinarySearch(pArry, Target, LeftIndex, RightIndex);
