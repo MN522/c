@@ -1,10 +1,10 @@
 #include "word_manage_p.h"
 
-Word word_array[WORD_NUM_MAX];
+Word word_arry[WORD_NUM_MAX];
 int num_of_word;
 
 //単語管理部を初期化する
-void word_initialize(void){
+void word_initilize(void){
     num_of_word = 0;
 }
 
