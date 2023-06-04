@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 int get_word(char *buf, int buf_size, FILE *fp){
     int len;
