@@ -1,11 +1,11 @@
-Word_count.exe: main.o add_word.o dump_wrod.o finalize.o get_word.o initilize.o
-	gcc -o Word_count main.o add_word.o dump_wrod.o finalize.o get_word.o initilize.o
+Word_count.exe: main.o add_word.o dump_word.o finalize.o get_word.o initilize.o
+	gcc -o Word_count main.o add_word.o dump_word.o finalize.o get_word.o initilize.o
 main.o: main.c
 	gcc -c main.c
 add_word.o: add_word.c
 	gcc -c add_word.c
-dump_wrod.o: dump_wrod.c
-	gcc -c dump_wrod.c
+dump_word.o: dump_word.c
+	gcc -c dump_word.c
 finalize.o: finalize.c
 	gcc -c finalize.c
 get_word.o: get_word.c

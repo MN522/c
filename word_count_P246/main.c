@@ -21,6 +21,7 @@ int main(){
 
     /* ファイルを読み込みながら単語を登録する　*/
     while (get_word(buf,WORD_LEN_MAX,fp) != EOF) {
+        printf("%s\n",buf);
         add_word(buf);
     }
     /* 単語の出現頻度を出力する　*/
