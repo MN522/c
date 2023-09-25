@@ -5,13 +5,16 @@
 #include <stdbool.h>
 #define COMMAND_LEN 10
 #define STR_LEN 12 + 1
-#define DIC_MAX 997
+#define DIC_MAX 1000003
+#define HASH_PRIME 3
 //#define DEBUG
 
 void InitDubleArrayChar(int NumRows, int NumCols, char dArry[][NumCols]);
 bool CommandInsert(char dArry[][STR_LEN], const char Str[]);
 void CommandFind(char dArry[][STR_LEN], const char Str[]);
-unsigned int GenHashKey(const char Str[], int NumCollisions);
+unsigned int GenDoubleHashKey(const char Str[], int NumCollisions);
+unsigned int GenHashKey1(const int key);
+unsigned int GenHashKey2(const int key);
 int main(){
 
     char Dic[DIC_MAX][STR_LEN]; 
@@ -69,13 +72,13 @@ bool CommandInsert(char dArry[][STR_LEN], const char Str[]){
 
     while (HashKey < DIC_MAX)
     {
-        //オープンアドレス法でハッシュ値を算出
-        HashKey = GenHashKey(Str, NumCollisions);
+        //ダブルハッシュ法でハッシュ値を算出
+        HashKey = GenDoubleHashKey(Str, NumCollisions);
         if(strcmp(dArry[HashKey], Str) == 0){
             //既に文字列が辞書あれば格納しない
             return false;
         }else if(strlen(dArry[HashKey]) != 0){
-            //空いてなかったらオープンアドレス法の為に衝突回数をインクリメント
+            //空いてなかったらダブルハッシュ法の為に衝突回数をインクリメント
             NumCollisions++;
         }else{
             //空いてたら文字列を格納する
@@ -95,33 +98,47 @@ void CommandFind(char dArry[][STR_LEN], const char Str[]){
     int NumCollisions = 0;
     bool FindDone = false;
 
-    //ハッシュ値が配列サイズを超えても見つからかったら無いという事
-    while (HashKey < DIC_MAX)
+    while (true)
     {
-        HashKey = GenHashKey(Str, NumCollisions);
+        HashKey = GenDoubleHashKey(Str, NumCollisions);
         if(strcmp(dArry[HashKey],Str) == 0){
+            //ハッシュ値の場所に探査文字列があった
             printf("yes\n");
             return;
+        }else if (strlen(dArry[HashKey]) == 0){
+            //ハッシュ値の場所が空なら辞書にないという事
+            printf("no\n");
+            return;
         }else{
-        //一致しなかったらオープンアドレス法の為に衝突回数をインクリメント
+        //他の文字列と衝突したらダブルハッシュ法の為に衝突回数をインクリメント
         NumCollisions++;
         }
     }
-    printf("no\n");
-    return;
 }
 
-//オープンアドレス法でハッシュ値を求める
-unsigned int GenHashKey(const char Str[], int NumCollisions){
+//ダブルハッシュ法でハッシュ値を求める
+unsigned int GenDoubleHashKey(const char Str[], int NumCollisions){
     unsigned int HashKey = 0;
     unsigned int ASCIISum = 0;
 
-    for(int i = 0; i <= NumCollisions; i++){
-        for(int j = 0; j < Str[j] != '\0'; j++){
-            ASCIISum += Str[j];
-        }
-    HashKey += ASCIISum % (DIC_MAX - HashKey);
+    for(int j = 0; j < Str[j] != '\0'; j++){
+        ASCIISum += Str[j];
     }
+    HashKey = (GenHashKey1(ASCIISum) + (NumCollisions * GenHashKey2(ASCIISum))) % DIC_MAX;
+    
     return HashKey;
+}
 
+//1つ目のハッシュ値を求める
+unsigned int GenHashKey1(const int key){
+    unsigned int HashKey = 0;
+    HashKey = key % DIC_MAX;
+    return HashKey;
+}
+
+//2つ目のハッシュ値を求める
+unsigned int GenHashKey2(const int key){
+    unsigned int HashKey = 0;
+    HashKey = HASH_PRIME + (key % DIC_MAX - HASH_PRIME);
+    return HashKey;
 }
