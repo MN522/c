@@ -5,13 +5,21 @@
 #include <stdbool.h>
 #define COMMAND_LEN 10
 #define STR_LEN 12 + 1
-#define DIC_MAX 1000003
+#define DIC_MAX 10003
+//ダブルハッシュ法用の定数
 #define HASH_PRIME 3
-//#define DEBUG
+//MMH用の定数
+#define MMH_CONST1 0xcc9e2d51
+#define MMH_CONST2 0x1b873593
+#define MMH_CONST3 0xe6546b64
+#define MMH_CONST4 0x85ebca6b
+#define MMH_CONST5 0xc2b2ae35
+#define DEBUG
 
 void InitDubleArrayChar(int NumRows, int NumCols, char dArry[][NumCols]);
 bool CommandInsert(char dArry[][STR_LEN], const char Str[]);
 void CommandFind(char dArry[][STR_LEN], const char Str[]);
+unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed);
 unsigned int GenDoubleHashKey(const char Str[], int NumCollisions);
 unsigned int GenHashKey1(const int key);
 unsigned int GenHashKey2(const int key);
@@ -90,7 +98,7 @@ bool CommandInsert(char dArry[][STR_LEN], const char Str[]){
     printf("error\n");
     return false;
 }
-
+ 
 //辞書から文字列を探す
 //あったら”Yes”なかったら”No”
 void CommandFind(char dArry[][STR_LEN], const char Str[]){
@@ -116,7 +124,66 @@ void CommandFind(char dArry[][STR_LEN], const char Str[]){
     }
 }
 
+//murmurhash法でハッシュ値を求める
+unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed){
+    const unsigned char *Data = (const unsigned char *)Str;
+    const int nBlocks = len / 4;
+
+    unsigned int h1 = seed;
+
+    //4byteずづキーを生成する
+    for(int i = 0; i < nBlocks; i++){
+        unsigned int Chunk;
+        memcpy(&Chunk, Data + (i * 4), sizeof(unsigned int));
+        
+        Chunk *= MMH_CONST1;
+        Chunk = (Chunk << 15 ) | (Chunk >> 17);
+        Chunk *= MMH_CONST2;
+
+        h1 ^= Chunk;
+        h1 = (h1 << 13) | (Chunk >> 19);
+        h1 = h1 * 5 + MMH_CONST3;
+    }
+
+    //最後のブロックが4byte未満だったら専用の処理が必要
+    const unsigned char *tail = (const unsigned char*)(Data + nBlocks * 4);
+    unsigned int k1 = 0;
+    switch (len & 0x3)
+    {
+    case 3:
+        //余り3
+        k1 ^=tail[2] << 16;
+        break;
+    case 2:
+        //余り2
+        k1 = tail[1] << 8;
+        break;
+    case 1:
+        //余り1
+        k1 ^= tail[0];
+        k1 *= MMH_CONST1;
+        k1 = (k1 << 15) | (k1 >> 17);
+        k1 *= MMH_CONST2;
+        h1 ^= k1;
+        break;
+    default:
+        break;
+    }
+
+    //締めの処理
+    h1 ^= len;
+    h1 ^= h1 >> 16;
+    h1 *= MMH_CONST4;
+    h1 ^= h1 >> 13;
+    h1 *= MMH_CONST5;
+    h1 ^= h1 >> 16;
+
+    return h1; 
+}
+
 //ダブルハッシュ法でハッシュ値を求める
+//文字を1文字ずづASCIIの値に置き換え足している。
+//同じ文字構成なら順番が異なっていても同じキーになってしまう。ランダム性が低い
 unsigned int GenDoubleHashKey(const char Str[], int NumCollisions){
     unsigned int HashKey = 0;
     unsigned int ASCIISum = 0;
