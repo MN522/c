@@ -14,13 +14,16 @@
 #define MMH_CONST3 0xe6546b64
 #define MMH_CONST4 0x85ebca6b
 #define MMH_CONST5 0xc2b2ae35
-#define DEBUG
+#define MMH_SEED 42
+//#define DEBUG
 
 void InitDubleArrayChar(int NumRows, int NumCols, char dArry[][NumCols]);
 bool CommandInsert(char dArry[][STR_LEN], const char Str[]);
 void CommandFind(char dArry[][STR_LEN], const char Str[]);
 unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed);
 unsigned int GenDoubleHashKey(const char Str[], int NumCollisions);
+unsigned long long GenBaseKey(const char Str[]);
+unsigned int GetCharNum(char ch);
 unsigned int GenHashKey1(const int key);
 unsigned int GenHashKey2(const int key);
 int main(){
@@ -108,6 +111,7 @@ void CommandFind(char dArry[][STR_LEN], const char Str[]){
 
     while (true)
     {
+        //ダブルハッシュ法でハッシュ値を算出
         HashKey = GenDoubleHashKey(Str, NumCollisions);
         if(strcmp(dArry[HashKey],Str) == 0){
             //ハッシュ値の場所に探査文字列があった
@@ -182,20 +186,45 @@ unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed){
 }
 
 //ダブルハッシュ法でハッシュ値を求める
-//文字を1文字ずづASCIIの値に置き換え足している。
-//同じ文字構成なら順番が異なっていても同じキーになってしまう。ランダム性が低い
 unsigned int GenDoubleHashKey(const char Str[], int NumCollisions){
     unsigned int HashKey = 0;
     unsigned int ASCIISum = 0;
+    unsigned int BaseKey = 0;
 
-    for(int j = 0; j < Str[j] != '\0'; j++){
-        ASCIISum += Str[j];
-    }
-    HashKey = (GenHashKey1(ASCIISum) + (NumCollisions * GenHashKey2(ASCIISum))) % DIC_MAX;
+    BaseKey = GenBaseKey(Str);
+    HashKey = (GenHashKey1(Str) + (NumCollisions * GenHashKey2(Str))) % DIC_MAX;
     
     return HashKey;
 }
 
+//文字列からベースとなる一意のキーを求める
+unsigned long long GenBaseKey(const char Str[]){
+    long long sum = 0;
+    long long p = 0;
+    long long i = 0;
+
+    for(i = 0; i<strlen(Str); i++){
+        sum += p * GetCharNum(Str[i]);
+        p *= 5;
+    }
+}
+
+//文字から数値に変換
+unsigned int GetCharNum(char ch){
+    switch (ch)
+    {
+    case 'A':
+        return 1;
+    case 'C':
+        return 2;
+    case 'G':
+        return 3;
+    case 'T':
+        return 4;
+    default:
+        return 0;
+    }
+}
 //1つ目のハッシュ値を求める
 unsigned int GenHashKey1(const int key){
     unsigned int HashKey = 0;
