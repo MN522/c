@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #define COMMAND_LEN 10
 #define STR_LEN 12 + 1
-#define DIC_MAX 10003
+#define DIC_MAX 1046527
 //ダブルハッシュ法用の定数
 #define HASH_PRIME 3
 //MMH用の定数
@@ -21,8 +21,8 @@ void InitDubleArrayChar(int NumRows, int NumCols, char dArry[][NumCols]);
 bool CommandInsert(char dArry[][STR_LEN], const char Str[]);
 void CommandFind(char dArry[][STR_LEN], const char Str[]);
 unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed);
-unsigned int GenDoubleHashKey(const char Str[], int NumCollisions);
-unsigned long long GenBaseKey(const char Str[]);
+unsigned int GenDoubleHashKey(const int Key ,int NumCollisions);
+long long GenBaseKey(const char Str[]);
 unsigned int GetCharNum(char ch);
 unsigned int GenHashKey1(const int key);
 unsigned int GenHashKey2(const int key);
@@ -80,11 +80,13 @@ bool CommandInsert(char dArry[][STR_LEN], const char Str[]){
     unsigned int HashKey = 0;
     int NumCollisions = 0;
     bool InsertDone = false;
+    int BaseKey;
 
+    BaseKey = GenBaseKey(Str);
     while (HashKey < DIC_MAX)
     {
         //ダブルハッシュ法でハッシュ値を算出
-        HashKey = GenDoubleHashKey(Str, NumCollisions);
+        HashKey = GenDoubleHashKey(BaseKey, NumCollisions);
         if(strcmp(dArry[HashKey], Str) == 0){
             //既に文字列が辞書あれば格納しない
             return false;
@@ -108,11 +110,13 @@ void CommandFind(char dArry[][STR_LEN], const char Str[]){
     unsigned int HashKey = 0;
     int NumCollisions = 0;
     bool FindDone = false;
+    int BaseKey;
 
+    BaseKey = GenBaseKey(Str);
     while (true)
     {
         //ダブルハッシュ法でハッシュ値を算出
-        HashKey = GenDoubleHashKey(Str, NumCollisions);
+        HashKey = GenDoubleHashKey(BaseKey, NumCollisions);
         if(strcmp(dArry[HashKey],Str) == 0){
             //ハッシュ値の場所に探査文字列があった
             printf("yes\n");
@@ -186,27 +190,28 @@ unsigned int GenMurmurhash3Key(const char Str[], int len, unsigned int seed){
 }
 
 //ダブルハッシュ法でハッシュ値を求める
-unsigned int GenDoubleHashKey(const char Str[], int NumCollisions){
+unsigned int GenDoubleHashKey(const int Key, int NumCollisions){
     unsigned int HashKey = 0;
     unsigned int ASCIISum = 0;
-    unsigned int BaseKey = 0;
 
-    BaseKey = GenBaseKey(Str);
-    HashKey = (GenHashKey1(Str) + (NumCollisions * GenHashKey2(Str))) % DIC_MAX;
+    //BaseKey = GenBaseKey(Str);
+    HashKey = (GenHashKey1(Key) + (NumCollisions * GenHashKey2(Key))) % DIC_MAX;
     
     return HashKey;
 }
 
 //文字列からベースとなる一意のキーを求める
-unsigned long long GenBaseKey(const char Str[]){
+long long GenBaseKey(const char Str[]){
     long long sum = 0;
-    long long p = 0;
+    long long p = 1;
     long long i = 0;
 
     for(i = 0; i<strlen(Str); i++){
         sum += p * GetCharNum(Str[i]);
         p *= 5;
     }
+    return sum;
+
 }
 
 //文字から数値に変換
